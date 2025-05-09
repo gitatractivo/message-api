@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/gitanshutalwar/Developer/message-api/logs/.8976086de9626f0eaef862c7099ce6c752ac9ed7-audit.json",
+    "files": [
+        {
+            "date": 1746724396882,
+            "name": "/Users/gitanshutalwar/Developer/message-api/logs/error-2025-05-08.log",
+            "hash": "ef4b71d38fc62fb059894ef4d4bf3470aa561c05d4a792c27189e2c30491a682"
+        },
+        {
+            "date": 1746730729344,
+            "name": "/Users/gitanshutalwar/Developer/message-api/logs/error-2025-05-09.log",
+            "hash": "bcf00ddf49b7f829f06849f5ec6743229d38cf06cb36677e9680a715a198acdc"
+        }
+    ],
+    "hashType": "sha256"
+}

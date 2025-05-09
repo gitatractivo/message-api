@@ -23,9 +23,6 @@ const io = new Server(server, {
   },
 });
 
-
-setupSocketIO(io);
-
 // Start the server
 const startServer = async () => {
   try {
@@ -36,6 +33,9 @@ const startServer = async () => {
       logger.error("Failed to connect to database. Server startup aborted.");
       process.exit(1);
     }
+
+    // Initialize WebSocket server
+    setupSocketIO(io);
 
     // Start the HTTP server
     server.listen(PORT, () => {

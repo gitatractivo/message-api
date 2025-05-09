@@ -32,12 +32,11 @@ const baseOptions = {
     ],
     servers: [
       {
-        url: "/api",
+        url: "/",
         description: "API server",
       },
     ],
   },
-  apis: ["./src/routes/*.ts", "./src/models/*.ts"],
 };
 
 // User-specific Swagger documentation
@@ -60,6 +59,11 @@ const userSwaggerOptions = {
       },
     ],
   },
+  apis: [
+    "./src/routes/auth.routes.ts",
+    "./src/routes/message.routes.ts",
+    "./src/routes/group.routes.ts",
+  ],
 };
 
 // Admin-specific Swagger documentation
@@ -69,16 +73,17 @@ const adminSwaggerOptions = {
     ...baseOptions.swaggerDefinition,
     info: {
       ...baseOptions.swaggerDefinition.info,
-      title: "Admin Messaging API",
-      description: "Admin endpoints for messaging application",
+      title: "Admin API",
+      description: "Admin management endpoints",
     },
     tags: [
-      { name: "Authentication", description: "Admin authentication endpoints" },
-      { name: "Admins", description: "Admin management endpoints" },
+      { name: "Admin Auth", description: "Admin authentication endpoints" },
+      { name: "Admin Management", description: "Admin CRUD operations" },
       { name: "User Management", description: "User administration endpoints" },
-      { name: "System", description: "System management endpoints" },
+    
     ],
   },
+  apis: ["./src/routes/admin.routes.ts"],
 };
 
 // Generate Swagger specifications

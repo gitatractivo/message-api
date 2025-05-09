@@ -59,6 +59,4 @@ export const setupSocketIO = (io: Server): void => {
       socket.disconnect(true);
     }
   });
-
-  logger.info("WebSocket server initialized");
 };

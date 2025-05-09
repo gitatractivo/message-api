@@ -17,7 +17,8 @@ router.use("/messages", authenticate, messageRoutes);
 // Apply group routes - authentication required
 router.use("/groups", authenticate, groupRoutes);
 
-// Apply admin routes - admin authentication required
-router.use("/admin", authenticate, requireAdmin, adminRoutes);
+// Apply admin routes
+// Note: Login route doesn't require authentication, other routes do
+router.use("/admin", adminRoutes);
 
 export default router;

@@ -5,34 +5,59 @@ class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
+    if (!process.env.SENDGRID_API_KEY || !process.env.EMAIL_FROM) {
+      logger.error(
+        "SendGrid credentials are missing. Please check your environment variables."
+      );
+      throw new Error("SendGrid credentials are missing");
+    }
+
+    // Use SendGrid SMTP settings
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: process.env.SMTP_SECURE === "true",
+      host: "smtp.sendgrid.net",
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: "apikey",
+        pass: process.env.SENDGRID_API_KEY,
       },
+      debug: process.env.NODE_ENV === "development", // Enable debug logs in development
+    });
+
+    // Verify connection configuration
+    this.transporter.verify((error: Error | null, success: boolean) => {
+      if (error) {
+        logger.error("SendGrid connection error:", error);
+        throw new Error(`SendGrid connection failed: ${error.message}`);
+      } else {
+        logger.info("SendGrid server is ready to take our messages");
+      }
     });
   }
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
     try {
-      const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
+      // pass token in params not in quer
 
-      await this.transporter.sendMail({
-        from: process.env.SMTP_FROM,
+      const verificationUrl = `${process.env.APP_URL}/api/auth/verify-email/${token}`;
+
+      //add some button to click here to verify your email with blue button border radius 10px
+      const mailOptions = {
+        from: process.env.EMAIL_FROM,
         to: email,
         subject: "Verify your email address",
         html: `
           <h1>Email Verification</h1>
           <p>Please click the link below to verify your email address:</p>
-          <a href="${verificationUrl}">${verificationUrl}</a>
+          <a href="${verificationUrl}" style="background-color: blue; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none;">click here to verify your email</a>
           <p>This link will expire in 24 hours.</p>
         `,
-      });
+      };
 
-      logger.info(`Verification email sent to ${email}`);
+      const info = await this.transporter.sendMail(mailOptions);
+      logger.info(
+        `Verification email sent to ${email}. Message ID: ${info.messageId}`
+      );
     } catch (error) {
       logger.error(`Failed to send verification email to ${email}:`, error);
       throw new Error("Failed to send verification email");
@@ -41,10 +66,10 @@ class EmailService {
 
   async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     try {
-      const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
+      const resetUrl = `${process.env.APP_URL}/reset-password/${token}`;
 
-      await this.transporter.sendMail({
-        from: process.env.SMTP_FROM,
+      const mailOptions = {
+        from: process.env.EMAIL_FROM,
         to: email,
         subject: "Reset your password",
         html: `
@@ -53,9 +78,12 @@ class EmailService {
           <a href="${resetUrl}">${resetUrl}</a>
           <p>This link will expire in 1 hour.</p>
         `,
-      });
+      };
 
-      logger.info(`Password reset email sent to ${email}`);
+      const info = await this.transporter.sendMail(mailOptions);
+      logger.info(
+        `Password reset email sent to ${email}. Message ID: ${info.messageId}`
+      );
     } catch (error) {
       logger.error(`Failed to send password reset email to ${email}:`, error);
       throw new Error("Failed to send password reset email");
@@ -64,8 +92,8 @@ class EmailService {
 
   async sendWelcomeEmail(email: string, name: string): Promise<void> {
     try {
-      await this.transporter.sendMail({
-        from: process.env.SMTP_FROM,
+      const mailOptions = {
+        from: process.env.EMAIL_FROM,
         to: email,
         subject: "Welcome to our platform!",
         html: `
@@ -73,9 +101,12 @@ class EmailService {
           <p>Thank you for joining our platform. We're excited to have you on board!</p>
           <p>You can now start using all the features available to you.</p>
         `,
-      });
+      };
 
-      logger.info(`Welcome email sent to ${email}`);
+      const info = await this.transporter.sendMail(mailOptions);
+      logger.info(
+        `Welcome email sent to ${email}. Message ID: ${info.messageId}`
+      );
     } catch (error) {
       logger.error(`Failed to send welcome email to ${email}:`, error);
       throw new Error("Failed to send welcome email");

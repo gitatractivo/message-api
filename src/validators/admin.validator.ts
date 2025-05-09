@@ -185,6 +185,34 @@ export const getAdminByIdSchema = z.object({
   }),
 });
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     AdminLoginInput:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *         password:
+ *           type: string
+ *       example:
+ *         email: admin@example.com
+ *         password: AdminPass123!
+ */
+export const adminLoginSchema = z.object({
+  body: z.object({
+    email: z.string().email("Invalid email format"),
+    password: z.string().min(1, "Password is required"),
+  }),
+});
+
+export type AdminLoginInput = TypeOf<typeof adminLoginSchema>;
+
 
 
 

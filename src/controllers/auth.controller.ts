@@ -63,10 +63,17 @@ class AuthController {
 
       const result = await authService.verifyEmail(token);
 
-      res.status(200).json({
-        status: "success",
-        data: result,
-      });
+
+      //return a dom page with a a message that email is verified successfully  
+      res.status(200).send(`
+        <html>
+          <body>
+            <h1>Email Verified Successfully</h1>
+            <p>Thank you for verifying your email address.</p>
+          </body>
+        </html>
+      `);
+      
     } catch (error) {
       next(error);
     }

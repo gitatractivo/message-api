@@ -19,7 +19,7 @@ export class AdminService {
     lastName: string;
     email: string;
     password: string;
-  }) {
+  }): Promise<{ admin: Pick<Admin, "id" | "firstName" | "lastName" | "email">; token: string }> {
     try {
       // Check if admin already exists
       const existingAdmin = await db.query.admins.findFirst({
@@ -65,7 +65,7 @@ export class AdminService {
   /**
    * Get all admins
    */
-  async getAllAdmins(limit: number, offset: number, search: string) {
+  async getAllAdmins(limit: number, offset: number, search: string): Promise<{ admins: Pick<Admin, "id" | "firstName" | "lastName" | "email">[] }> {
     try {
       const allAdmins = await db.query.admins.findMany({
         columns: {
@@ -89,7 +89,7 @@ export class AdminService {
   /**
    * Get admin by ID
    */
-  async getAdminById(adminId: number) {
+  async getAdminById(adminId: number): Promise<{ admin: Pick<Admin, "id" | "firstName" | "lastName" | "email"> }> {
     try {
       const admin = await db.query.admins.findFirst({
         where: eq(admins.id, adminId),
@@ -122,7 +122,7 @@ export class AdminService {
       lastName?: string;
       email?: string;
     }
-  ) {
+  ): Promise<{ admin: Pick<Admin, "id" | "firstName" | "lastName" | "email"> }> {
     try {
       const admin = await db.query.admins.findFirst({
         where: eq(admins.id, adminId),
@@ -155,7 +155,7 @@ export class AdminService {
   /**
    * Delete an admin
    */
-  async deleteAdmin(adminId: number) {
+  async deleteAdmin(adminId: number): Promise<{ message: string }> {
     try {
       const admin = await db.query.admins.findFirst({
         where: eq(admins.id, adminId),
@@ -209,7 +209,7 @@ export class AdminService {
     adminId: number,
     currentPassword: string,
     newPassword: string
-  ) {
+  ): Promise<{ message: string }> {
     try {
       const admin = await db.query.admins.findFirst({
         where: eq(admins.id, adminId),

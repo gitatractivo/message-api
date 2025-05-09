@@ -36,7 +36,7 @@ export interface AdminResponse {
   updatedAt: Date;
 }
 
-export interface AuthResponse {
+export interface AuthResponse { 
   user: UserResponse | AdminResponse;
   token: string;
 }

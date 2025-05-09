@@ -5,20 +5,20 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "start": "node -r tsconfig-paths/register dist/server.js",
+    "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/server.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "migrate": "drizzle-kit migrate",
+    "migrate": "drizzle-kit generate:pg",
     "studio": "drizzle-kit studio",
-    "generate": "drizzle-kit generate",
-    "seed": "drizzle-kit seed",
-    "push": "drizzle-kit push",
-    "pull": "drizzle-kit pull"
+    "generate": "drizzle-kit generate:pg",
+    "seed": "ts-node -r tsconfig-paths/register src/db/seed.ts",
+    "push": "drizzle-kit push:pg",
+    "pull": "drizzle-kit pull:pg"
   },
   "keywords": [
     "api",
@@ -57,6 +57,7 @@
     "@types/jest": "^29.5.10",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^22.15.16",
+    "@types/nodemailer": "^6.4.17",
     "@types/pg": "^8.10.9",
     "@types/supertest": "^2.0.16",
     "@types/swagger-jsdoc": "^6.0.4",
@@ -72,6 +73,7 @@
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
 }

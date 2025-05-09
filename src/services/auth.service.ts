@@ -7,15 +7,17 @@ import { logger } from "@/config/logger";
 import { AppError } from "@/utils/appError";
 import { generateToken } from "@/utils/token";
 import { generateToken as generateJWTToken } from "@/utils/jwt.util";
+import { User } from "@/models/user.model";
 
 class AuthService {
+  //set return type for all methods
   async register(userData: {
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     country: string;
-  }) {
+  }): Promise<{ user: Pick<User, "id" | "firstName" | "lastName" | "email" | "country" | "isVerified">; token: string }> {
     try {
       // Check if user already exists
       const existingUser = await db.query.users.findFirst({
@@ -62,6 +64,7 @@ class AuthService {
           isVerified: user.isVerified,
         },
         token,
+        
       };
     } catch (error) {
       logger.error("Registration failed:", error);
@@ -69,7 +72,7 @@ class AuthService {
     }
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<{ user: Pick<User, "id" | "firstName" | "lastName" | "email" | "country" | "isVerified">; token: string }> {
     try {
       // Find user
       const user = await db.query.users.findFirst({
@@ -107,12 +110,13 @@ class AuthService {
     }
   }
 
-  async verifyEmail(token: string) {
+  async verifyEmail(token: string): Promise<{ message: string }> {
     try {
+      console.log(token);
       const user = await db.query.users.findFirst({
         where: eq(users.verificationToken, token),
       });
-
+      console.log(user);
       if (
         !user ||
         !user.resetPasswordExpires ||
@@ -120,7 +124,8 @@ class AuthService {
       ) {
         throw new AppError("Invalid or expired verification token", 400);
       }
-
+      
+      // console.log(user.id,);
       await db
         .update(users)
         .set({
@@ -130,8 +135,11 @@ class AuthService {
         })
         .where(eq(users.id, user.id));
 
+      console.log("Email verified successfully");
       // Send welcome email
-      await emailService.sendWelcomeEmail(user.email, user.firstName);
+      // await emailService.sendWelcomeEmail(user.email, user.firstName);
+
+      //return a dom page with a a message that email is verified successfully
 
       return { message: "Email verified successfully" };
     } catch (error) {
@@ -140,7 +148,7 @@ class AuthService {
     }
   }
 
-  async forgotPassword(email: string) {
+  async forgotPassword(email: string): Promise<{ message: string }> {
     try {
       const user = await db.query.users.findFirst({
         where: eq(users.email, email),
@@ -169,7 +177,7 @@ class AuthService {
     }
   }
 
-  async resetPassword(token: string, newPassword: string) {
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
     try {
       const user = await db.query.users.findFirst({
         where: eq(users.resetPasswordToken, token),

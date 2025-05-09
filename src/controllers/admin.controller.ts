@@ -14,9 +14,11 @@ import {
   DeleteAdminInput,
   GetAdminsInput,
   GetAdminByIdInput,
+  AdminLoginInput,
 } from "@/validators/admin.validator";
 import { asyncHandler } from "@/utils/asyncHandler";
 import { ApiError } from "@/utils/ApiError";
+import { generateToken } from "@/utils/jwt.util";
 
 /**
  * Admin controller for managing admin operations
@@ -160,12 +162,14 @@ class AdminController {
   }
 
   getAllUsers = asyncHandler(async (req: Request, res: Response) => {
+    console.log(req.query);
     const limit = Number(req.query.limit) || 50;
     const offset = Number(req.query.offset) || 0;
     const search = req.query.search as string | undefined;
 
+    console.log(limit, offset, search);
     const query = db.select().from(users).limit(limit).offset(offset);
-
+    console.log(query);
     if (search) {
       query.where(
         eq(users.email, search) ||
@@ -261,6 +265,38 @@ class AdminController {
       });
     }
   );
+
+  async login(
+    req: Request<{}, {}, AdminLoginInput["body"]>,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { email, password } = req.body;
+
+      const admin = await adminService.verifyAdminCredentials(email, password);
+      if (!admin) {
+        throw new ApiError(401, "Invalid credentials");
+      }
+
+      const token = generateToken(admin.id, admin.email, "admin");
+
+      res.status(200).json({
+        status: "success",
+        data: {
+          admin: {
+            id: admin.id,
+            firstName: admin.firstName,
+            lastName: admin.lastName,
+            email: admin.email,
+          },
+          token,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const adminController = new AdminController();

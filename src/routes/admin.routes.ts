@@ -6,50 +6,248 @@ import {
   updateUserSchema,
   deleteUserSchema,
   getUsersSchema,
+  adminLoginSchema,
 } from "@/validators/admin.validator";
 
 const router = Router();
 
-//routes to create admin
-router.post("/",  adminController.createAdmin);
+// Public routes (no authentication required)
+/**
+ * @swagger
+ * /api/admin/login:
+ *   post:
+ *     summary: Login as admin
+ *     tags: [Admin Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AdminLoginInput'
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     admin:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                         firstName:
+ *                           type: string
+ *                         lastName:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                     token:
+ *                       type: string
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Server error
+ */
+router.post("/login", validateRequest(adminLoginSchema), adminController.login);
 
-//routes to get all admins
-router.get("/",  adminController.getAllAdmins);
-
-//routes to get admin by id
-router.get(
-  "/:adminId",
-
-  adminController.getAdminById
-);
-
-//routes to update admin
-router.put(
-  "/:adminId",
-
-  adminController.updateAdmin
-);
-
-//routes to delete admin
-router.delete(
-  "/:adminId",
-
-  adminController.deleteAdmin
-);
+// Protected routes (require authentication and admin privileges)
+router.use(authenticate, requireAdmin);
 
 /**
  * @swagger
- * tags:
- *   name: Admin
- *   description: Admin management endpoints
+ * /api/admin:
+ *   post:
+ *     summary: Create a new admin
+ *     tags: [Admin Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *               - email
+ *               - password
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       201:
+ *         description: Admin created successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Not an admin
+ *       500:
+ *         description: Server error
  */
+router.post("/", adminController.createAdmin);
+
+/**
+ * @swagger
+ * /api/admin:
+ *   get:
+ *     summary: Get all admins
+ *     tags: [Admin Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of admins to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of admins to skip
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term for filtering admins
+ *     responses:
+ *       200:
+ *         description: List of admins
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Not an admin
+ *       500:
+ *         description: Server error
+ */
+router.get("/", adminController.getAllAdmins);
+
+/**
+ * @swagger
+ * /api/admin/{adminId}:
+ *   get:
+ *     summary: Get admin by ID
+ *     tags: [Admin Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: adminId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the admin to retrieve
+ *     responses:
+ *       200:
+ *         description: Admin details
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Not an admin
+ *       404:
+ *         description: Admin not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/:adminId", adminController.getAdminById);
+
+/**
+ * @swagger
+ * /api/admin/{adminId}:
+ *   put:
+ *     summary: Update admin details
+ *     tags: [Admin Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: adminId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the admin to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Admin updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Not an admin
+ *       404:
+ *         description: Admin not found
+ *       500:
+ *         description: Server error
+ */
+router.put("/:adminId", adminController.updateAdmin);
+
+/**
+ * @swagger
+ * /api/admin/{adminId}:
+ *   delete:
+ *     summary: Delete an admin
+ *     tags: [Admin Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: adminId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the admin to delete
+ *     responses:
+ *       200:
+ *         description: Admin deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Not an admin
+ *       404:
+ *         description: Admin not found
+ *       500:
+ *         description: Server error
+ */
+router.delete("/:adminId", adminController.deleteAdmin);
 
 /**
  * @swagger
  * /api/admin/users:
  *   get:
  *     summary: Get all users (admin only)
- *     tags: [Admin]
+ *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -82,9 +280,7 @@ router.delete(
  */
 router.get(
   "/users",
-
   validateRequest(getUsersSchema),
-
   adminController.getAllUsers
 );
 
@@ -93,7 +289,7 @@ router.get(
  * /api/admin/users/{userId}:
  *   patch:
  *     summary: Update a user (admin only)
- *     tags: [Admin]
+ *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -135,9 +331,7 @@ router.get(
  */
 router.patch(
   "/users/:userId",
-
   validateRequest(updateUserSchema),
-
   adminController.updateUser
 );
 
@@ -146,7 +340,7 @@ router.patch(
  * /api/admin/users/{userId}:
  *   delete:
  *     summary: Delete a user (admin only)
- *     tags: [Admin]
+ *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -170,7 +364,6 @@ router.patch(
  */
 router.delete(
   "/users/:userId",
-
   validateRequest(deleteUserSchema),
   adminController.deleteUser
 );
@@ -180,7 +373,7 @@ router.delete(
  * /api/admin/stats:
  *   get:
  *     summary: Get system statistics (admin only)
- *     tags: [Admin]
+ *     tags: [User Management]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -206,10 +399,6 @@ router.delete(
  *       500:
  *         description: Server error
  */
-router.get(
-  "/stats",
-
-  adminController.getSystemStats
-);
+router.get("/stats", adminController.getSystemStats);
 
 export default router;

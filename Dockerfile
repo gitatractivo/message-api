@@ -1,19 +1,22 @@
-FROM node:18-alpine as builder
+FROM node:20-slim as builder
 
 WORKDIR /app
 
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 COPY package*.json ./
-
-# i am using pnpm instead of npm for the project so do i need to install pnpm? 
-
 
 RUN pnpm install
 
 RUN pnpm run build
 
-FROM node:18-alpine
+FROM node:20-slim
 
 WORKDIR /app
+
+# Install pnpm in production image
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY package*.json ./
 
