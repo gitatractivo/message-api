@@ -44,6 +44,7 @@ export const authenticate = async (
       throw new ApiError(401, "User not found");
     }
 
+    // console.log(user);
     // Store user in both req.user and res.locals
     req.user = user;
     res.locals.user = user;
@@ -65,6 +66,7 @@ export const requireVerifiedUser = async (
 ): Promise<void> => {
   try {
     const user = res.locals.user;
+
     if (!user) {
       throw new ApiError(401, "Authentication required");
     }
@@ -72,6 +74,7 @@ export const requireVerifiedUser = async (
     if (!user.isVerified) {
       throw new ApiError(403, "Email verification required");
     }
+
 
     next();
   } catch (error) {
@@ -94,6 +97,8 @@ export const requireAdmin = async (
     if (!user.isAdmin) {
       throw new ApiError(403, "Admin privileges required");
     }
+
+    console.log("Admin verified");
 
     next();
   } catch (error) {

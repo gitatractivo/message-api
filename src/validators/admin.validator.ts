@@ -11,6 +11,7 @@ import { z, TypeOf } from "zod";
  *         - lastName
  *         - email
  *         - password
+ *         - country
  *       properties:
  *         firstName:
  *           type: string
@@ -27,11 +28,16 @@ import { z, TypeOf } from "zod";
  *           type: string
  *           minLength: 8
  *           maxLength: 100
+ *         country:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 100
  *       example:
  *         firstName: Admin
  *         lastName: User
  *         email: admin@example.com
  *         password: StrongAdminPass123!
+ *         country: United States
  */
 export const createAdminSchema = z.object({
   body: z.object({
@@ -52,6 +58,10 @@ export const createAdminSchema = z.object({
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
         "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
       ),
+    country: z
+      .string()
+      .min(2, "Country must be at least 2 characters")
+      .max(100),
   }),
 });
 
@@ -73,10 +83,15 @@ export const createAdminSchema = z.object({
  *         email:
  *           type: string
  *           format: email
+ *         country:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 100
  *       example:
  *         firstName: New Admin
  *         lastName: Name
  *         email: new.admin@example.com
+ *         country: Canada
  */
 export const updateAdminSchema = z.object({
   params: z.object({
@@ -94,6 +109,11 @@ export const updateAdminSchema = z.object({
       .max(50)
       .optional(),
     email: z.string().email("Invalid email format").optional(),
+    country: z
+      .string()
+      .min(2, "Country must be at least 2 characters")
+      .max(100)
+      .optional(),
   }),
 });
 
@@ -141,7 +161,13 @@ export const updateUserSchema = z.object({
     email: z.string().email().optional(),
     isVerified: z.boolean().optional(),
     isAdmin: z.boolean().optional(),
+    // make sure that atleast one field is provided in body and convert this to actual zod validation keys not object keys
+
+  }).refine((data) => data.email || data.firstName || data.lastName, {
+    message: "At least one field must be provided",
   }),
+  // make sure that atleast one field is provided in body
+
 });
 
 export const getUsersSchema = z.object({

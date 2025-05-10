@@ -14,6 +14,11 @@
             "date": 1746730729346,
             "name": "/Users/gitanshutalwar/Developer/message-api/logs/combined-2025-05-09.log",
             "hash": "5dc62e781d7e2d989e0fd3bb162497563a23a740a8f5d0f3691040d5179332a8"
+        },
+        {
+            "date": 1746887672241,
+            "name": "/Users/gitanshutalwar/Developer/message-api/logs/combined-2025-05-10.log",
+            "hash": "26f28791fa777b038076733a91b636a421b7687e2906a2ca293dc200f2db0f96"
         }
     ],
     "hashType": "sha256"

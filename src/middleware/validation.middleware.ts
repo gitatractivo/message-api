@@ -7,7 +7,6 @@ export const validateRequest = (schema: AnyZodObject) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       logger.debug(`Validating request for ${req.method} ${req.url} ${schema}`);
-   
       await schema.parseAsync({
         body: req.body,
         query: req.query,

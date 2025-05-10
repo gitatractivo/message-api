@@ -16,12 +16,17 @@ const app: Express = express();
 app.use(helmet()); // Security headers
 app.use(cors()); // CORS configuration
 app.use(compression()); // Response compression
+
 app.use(express.json()); // Parse JSON request bodies
+
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 app.use(logRequest); // Request logging
 
 // Apply rate limiting
 setupRateLimiter(app);
+
+
+
 
 // Register API routes
 app.use("/api", routes);

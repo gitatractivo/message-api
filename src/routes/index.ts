@@ -8,6 +8,19 @@ import { authenticate, requireAdmin } from "@/middleware/auth.middleware";
 // Create main router
 const router = Router();
 
+
+
+// only for testing check if env has dev env
+if (process.env.NODE_ENV === "development") {
+  router.use((req, res, next) => {
+    console.log("--------------------------------");
+  console.log("--------------------------------");
+  console.log(req.url);
+  console.log("--------------------------------");
+  next();
+});
+}
+
 // Apply auth routes - no authentication required
 router.use("/auth", authRoutes);
 
