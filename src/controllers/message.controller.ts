@@ -7,7 +7,9 @@ import {
   GetDirectMessagesInput,
   GetGroupMessagesInput,
   MarkMessageReadInput,
+  DeleteMessageInput,
 } from "@/validators/message.validator";
+
 
 class MessageController {
   async sendDirectMessage(
@@ -119,7 +121,7 @@ class MessageController {
   ) {
     try {
       const userId = req.user?.id;
-      const { messageId } = req.params;
+      const { otherUserId } = req.params;
 
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -127,7 +129,7 @@ class MessageController {
 
       const result = await messageService.markMessageAsRead(
         userId,
-        Number(messageId)
+        Number(otherUserId)
       );
 
       res.json(result);
@@ -150,6 +152,45 @@ class MessageController {
       res.json(result);
     } catch (error) {
       logger.error("Failed to get unread message count:", error);
+      next(error);
+    }
+  }
+
+  async getAllConversations(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const result = await messageService.getAllConversations(userId);
+
+      res.json(result);
+    } catch (error) {
+      logger.error("Failed to get conversations:", error);
+      next(error);
+    }
+  }
+
+  async deleteMessage(
+    req: Request<DeleteMessageInput["params"], {}, {}, {}>,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = req.user?.id;
+      const { messageId } = req.params;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const result = await messageService.deleteMessage(userId, Number(messageId));
+
+      res.json(result);
+    } catch (error) {
+      logger.error("Failed to delete message:", error);
       next(error);
     }
   }

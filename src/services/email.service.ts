@@ -66,7 +66,9 @@ class EmailService {
 
   async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     try {
-      const resetUrl = `${process.env.APP_URL}/reset-password/${token}`;
+      const resetUrl = `${process.env.APP_URL}/api/auth/reset-password/${token}`;
+
+      // currently i don't have ui so just email that make a post request to reset password and send the token in the body and add a button to click here to reset password with blue button border radius 10px when clicked token is copied to clipboard and button text is copy toke to clipboard and link swagger url for user
 
       const mailOptions = {
         from: process.env.EMAIL_FROM,
@@ -74,9 +76,21 @@ class EmailService {
         subject: "Reset your password",
         html: `
           <h1>Password Reset</h1>
-          <p>Please click the link below to reset your password:</p>
-          <a href="${resetUrl}">${resetUrl}</a>
-          <p>This link will expire in 1 hour.</p>
+          <p>Please click the link below to copy url of token to clipboard:</p>
+          ${token}
+          <p>This link will expire in 24 hours.</p>
+
+          <a href="${process.env.APP_URL}/api/docs/user" style="background-color: green; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none;">Swagger User Docs Link</a>
+
+
+
+          <script>
+            function copyTokenToClipboard(token) {
+              navigator.clipboard.writeText(token);
+            }
+          </script>
+          
+         
         `,
       };
 

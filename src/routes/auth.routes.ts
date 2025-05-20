@@ -260,17 +260,11 @@ router.post(
 
 /**
  * @swagger
- * /api/auth/reset-password/{token}:
+ * /api/auth/reset-password:
  *   post:
  *     summary: Reset password with token
  *     tags: [Authentication]
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *         description: Password reset token
+ *    
  *     requestBody:
  *       required: true
  *       content:
@@ -284,6 +278,9 @@ router.post(
  *                 type: string
  *                 format: password
  *                 description: New password
+ *               token:
+ *                 type: string
+ *                 description: Password reset token
  *     responses:
  *       200:
  *         description: Password reset successful
@@ -307,7 +304,7 @@ router.post(
  *         description: Server error
  */
 router.post(
-  "/reset-password/:token",
+  "/reset-password/",
   validateRequest(resetPasswordSchema),
 
   authController.resetPassword

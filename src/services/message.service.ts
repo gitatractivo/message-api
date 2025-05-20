@@ -6,7 +6,7 @@ import {
   groupMembers,
   groupMessages,
 } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or } from "drizzle-orm";
 import { logger } from "@/config/logger";
 import { AppError } from "@/utils/appError";
 
@@ -21,9 +21,12 @@ class MessageService {
       const receiver = await db.query.users.findFirst({
         where: eq(users.id, receiverId),
       });
+      const sender = await db.query.users.findFirst({
+        where: eq(users.id, senderId),
+      });
 
-      if (!receiver) {
-        throw new AppError("Receiver not found", 404);
+      if (!receiver || !sender) {
+        throw new AppError("Receiver or sender not found", 404);
       }
 
       // Create message
@@ -42,17 +45,15 @@ class MessageService {
           ...message,
           sender: {
             id: senderId,
-            firstName: (
-              await db.query.users.findFirst({ where: eq(users.id, senderId) })
-            )?.firstName,
-            lastName: (
-              await db.query.users.findFirst({ where: eq(users.id, senderId) })
-            )?.lastName,
+            firstName: sender.firstName,
+            lastName: sender.lastName,
+            email: sender.email,
           },
           receiver: {
             id: receiverId,
             firstName: receiver.firstName,
             lastName: receiver.lastName,
+            email: receiver.email,
           },
         },
       };
@@ -127,9 +128,15 @@ class MessageService {
   ) {
     try {
       const directMessages = await db.query.messages.findMany({
-        where: and(
-          eq(messages.senderId, userId),
-          eq(messages.receiverId, otherUserId)
+        where: or(
+          and(
+            eq(messages.senderId, userId),
+            eq(messages.receiverId, otherUserId)
+          ),
+          and(
+            eq(messages.senderId, otherUserId),
+            eq(messages.receiverId, userId)
+          )
         ),
         orderBy: [desc(messages.sentAt)],
         limit,
@@ -159,14 +166,17 @@ class MessageService {
     }
   }
 
-  async markMessageAsRead(userId: number, messageId: number) {
+  async markMessageAsRead(userId: number, otherUserId: number) {
     try {
       const message = await db.query.messages.findFirst({
-        where: eq(messages.id, messageId),
+        where: and(
+          eq(messages.senderId, otherUserId),
+          eq(messages.receiverId, userId)
+        ),
       });
 
       if (!message) {
-        throw new AppError("Message not found", 404);
+        return { message: "All messages are already read" };
       }
 
       // Check if user is authorized to mark the message as read
@@ -177,13 +187,19 @@ class MessageService {
         );
       }
 
-      const [updatedMessage] = await db
+      const updatedMessages = await db
         .update(messages)
         .set({ read: true })
-        .where(eq(messages.id, messageId))
+        .where(
+          and(
+            eq(messages.senderId, otherUserId),
+            eq(messages.receiverId, userId),
+            eq(messages.read, false)
+          )
+        )
         .returning();
 
-      return { message: updatedMessage };
+      return { message: updatedMessages };
     } catch (error) {
       logger.error("Failed to mark message as read:", error);
       throw error;
@@ -199,6 +215,106 @@ class MessageService {
       return { count: unreadMessages.length };
     } catch (error) {
       logger.error("Failed to get unread message count:", error);
+      throw error;
+    }
+  }
+
+  async getAllConversations(userId: number) {
+    try {
+      // Get all unique users that the current user has conversations with
+      const conversations = await db.query.messages.findMany({
+        where: or(
+          eq(messages.senderId, userId),
+          eq(messages.receiverId, userId)
+        ),
+        orderBy: [desc(messages.sentAt)],
+        with: {
+          sender: {
+            columns: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          receiver: {
+            columns: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // Group conversations by the other user
+      const conversationMap = new Map();
+      conversations.forEach((message) => {
+        const otherUserId =
+          message.senderId === userId ? message.receiverId : message.senderId;
+        if (!conversationMap.has(otherUserId)) {
+          conversationMap.set(otherUserId, {
+            userId: otherUserId,
+            firstName:
+              message.senderId === userId
+                ? message.receiver.firstName
+                : message.sender.firstName,
+            lastName:
+              message.senderId === userId
+                ? message.receiver.lastName
+                : message.sender.lastName,
+            lastMessage: message.content,
+            lastMessageTime: message.sentAt,
+            email:
+              message.senderId === userId
+                ? message.receiver.email
+                : message.sender.email,
+            unreadCount: 0,
+          });
+        }
+        // Update unread count if message is unread and receiver is current user
+        if (!message.read && message.receiverId === userId) {
+          const conversation = conversationMap.get(otherUserId);
+          conversation.unreadCount++;
+          conversationMap.set(otherUserId, conversation);
+        }
+      });
+
+      return {
+        conversations: Array.from(conversationMap.values()).sort(
+          (a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime()
+        ),
+      };
+    } catch (error) {
+      logger.error("Failed to get conversations:", error);
+      throw error;
+    }
+  }
+
+  async deleteMessage(userId: number, messageId: number) {
+    try {
+      const message = await db.query.messages.findFirst({
+        where: eq(messages.id, messageId),
+      });
+
+      if (!message) {
+        throw new AppError("Message not found", 404);
+      }
+
+      // Check if user is authorized to delete the message
+      if (message.senderId !== userId) {
+        throw new AppError(
+          "You are not authorized to delete this message",
+          403
+        );
+      }
+
+      await db.delete(messages).where(eq(messages.id, messageId));
+
+      return { success: true, message: "Message deleted successfully" };
+    } catch (error) {
+      logger.error("Failed to delete message:", error);
       throw error;
     }
   }

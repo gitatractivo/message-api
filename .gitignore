@@ -10,3 +10,12 @@ dist
 
 # Jest
 coverage
+
+
+# logs
+logs
+*.log
+npm-debug.log*
+
+
+logs/.*.json

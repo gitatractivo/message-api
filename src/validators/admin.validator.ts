@@ -155,19 +155,19 @@ export const changeAdminPasswordSchema = z.object({
 });
 
 export const updateUserSchema = z.object({
-  body: z.object({
-    firstName: z.string().min(2).optional(),
-    lastName: z.string().min(2).optional(),
-    email: z.string().email().optional(),
-    isVerified: z.boolean().optional(),
-    isAdmin: z.boolean().optional(),
-    // make sure that atleast one field is provided in body and convert this to actual zod validation keys not object keys
-
-  }).refine((data) => data.email || data.firstName || data.lastName, {
-    message: "At least one field must be provided",
-  }),
+  body: z
+    .object({
+      firstName: z.string().min(2).optional(),
+      lastName: z.string().min(2).optional(),
+      email: z.string().email().optional(),
+      isVerified: z.boolean().optional(),
+      isAdmin: z.boolean().optional(),
+      // make sure that atleast one field is provided in body and convert this to actual zod validation keys not object keys
+    })
+    .refine((data) => data.email || data.firstName || data.lastName, {
+      message: "At least one field must be provided",
+    }),
   // make sure that atleast one field is provided in body
-
 });
 
 export const getUsersSchema = z.object({
@@ -190,12 +190,12 @@ export const deleteUserSchema = z.object({
   }),
 });
 
-
+//offset and limit maybe string or number convert it to number
 export const getAdminsSchema = z.object({
   query: z.object({
-    limit: z.number().optional().default(50),
-    offset: z.number().optional().default(0),
+    limit: z.coerce.number().optional().default(50),
     search: z.string().optional(),
+    offset: z.coerce.number().optional().default(0),
   }),
 });
 
@@ -238,10 +238,6 @@ export const adminLoginSchema = z.object({
 });
 
 export type AdminLoginInput = TypeOf<typeof adminLoginSchema>;
-
-
-
-
 
 // Export types
 export type CreateAdminInput = TypeOf<typeof createAdminSchema>;

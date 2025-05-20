@@ -28,6 +28,7 @@ class AuthController {
       res.status(201).json({
         status: "success",
         data: result,
+        message: "User registered successfully, Please check your email for verification",
       });
     } catch (error) {
       next(error);

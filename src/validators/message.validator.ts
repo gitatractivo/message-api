@@ -51,10 +51,7 @@ export const sendMessageSchema = z.object({
  */
 export const markMessageReadSchema = z.object({
   params: z.object({
-    messageId: z
-      .number()
-      .int()
-      .positive("Message ID must be a positive integer"),
+    otherUserId: z.coerce.number().int().positive("Other User ID must be a positive integer"),
   }),
 });
 
@@ -97,8 +94,8 @@ export const messageQuerySchema = z.object({
       .positive("User ID must be a positive integer")
       .optional(),
     unreadOnly: z.boolean().optional(),
-    limit: z.number().int().min(1).max(100).default(20).optional(),
-    offset: z.number().int().min(0).default(0).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
+    offset: z.coerce.number().int().min(0).default(0).optional(),
   }),
 });
 
@@ -115,8 +112,8 @@ export const getDirectMessagesSchema = z.object({
   query: z.object({
     userId: z.number().int().positive("User ID must be a positive integer").optional(),
     otherUserId: z.number().int().positive("Other user ID must be a positive integer").optional(),
-    limit: z.number().int().min(1).max(100).default(20).optional(),
-    offset: z.number().int().min(0).default(0).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
+    offset: z.coerce.number().int().min(0).default(0).optional(),
   }),
 });
 
@@ -124,11 +121,17 @@ export const getDirectMessagesSchema = z.object({
 export const getGroupMessagesSchema = z.object({
   query: z.object({
     groupId: z.number().int().positive("Group ID must be a positive integer").optional(),
-    limit: z.number().int().min(1).max(100).default(20).optional(),
-    offset: z.number().int().min(0).default(0).optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
+    offset: z.coerce.number().int().min(0).default(0).optional(),
   }),
 });
 
+//schema for delete message
+export const deleteMessageSchema = z.object({
+  params: z.object({
+    messageId: z.number().int().positive("Message ID must be a positive integer"),
+  }),
+});
 
 // Export types
 export type SendMessageInput = TypeOf<typeof sendMessageSchema>;
@@ -137,3 +140,4 @@ export type MessageQueryInput = TypeOf<typeof messageQuerySchema>;
 export type SendGroupMessageInput = TypeOf<typeof sendGroupMessageSchema>;
 export type GetDirectMessagesInput = TypeOf<typeof getDirectMessagesSchema>;
 export type GetGroupMessagesInput = TypeOf<typeof getGroupMessagesSchema>;
+export type DeleteMessageInput = TypeOf<typeof deleteMessageSchema>;

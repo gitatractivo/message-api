@@ -168,8 +168,8 @@ export const getGroupByIdSchema = z.object({
 //schema for get all groups
 export const getAllGroupsSchema = z.object({
   query: z.object({
-    limit: z.number().optional(),
-    offset: z.number().optional(),
+    limit: z.coerce.number().optional(),
+    offset: z.coerce.number().optional(),
   }),
 });
 

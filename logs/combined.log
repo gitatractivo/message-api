@@ -6298,3 +6298,72 @@
 {"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-10T15:37:15.141Z"}
 {"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-10T15:37:15.141Z"}
 {"level":"info","message":"SendGrid server is ready to take our messages","timestamp":"2025-05-10T15:37:16.842Z"}
+{"level":"info","message":"Rate limiters configured successfully","timestamp":"2025-05-20T18:33:44.145Z"}
+{"level":"info","message":"Swagger documentation initialized successfully","timestamp":"2025-05-20T18:33:44.146Z"}
+{"level":"info","message":"Connected to PostgreSQL database","timestamp":"2025-05-20T18:33:44.190Z"}
+{"level":"info","message":"Database connection successful","timestamp":"2025-05-20T18:33:44.191Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-05-20T18:33:44.191Z"}
+{"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-20T18:33:44.191Z"}
+{"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-20T18:33:44.192Z"}
+{"level":"info","message":"SendGrid server is ready to take our messages","timestamp":"2025-05-20T18:33:45.600Z"}
+{"level":"info","message":"SIGTERM signal received. Shutting down gracefully.","timestamp":"2025-05-20T18:33:55.985Z"}
+{"level":"info","message":"Rate limiters configured successfully","timestamp":"2025-05-20T18:33:56.588Z"}
+{"level":"info","message":"Swagger documentation initialized successfully","timestamp":"2025-05-20T18:33:56.589Z"}
+{"level":"info","message":"Connected to PostgreSQL database","timestamp":"2025-05-20T18:33:56.623Z"}
+{"level":"info","message":"Database connection successful","timestamp":"2025-05-20T18:33:56.623Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-05-20T18:33:56.624Z"}
+{"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-20T18:33:56.624Z"}
+{"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-20T18:33:56.624Z"}
+{"level":"info","message":"SIGTERM signal received. Shutting down gracefully.","timestamp":"2025-05-20T18:33:56.640Z"}
+{"level":"info","message":"Rate limiters configured successfully","timestamp":"2025-05-20T18:33:57.064Z"}
+{"level":"info","message":"Swagger documentation initialized successfully","timestamp":"2025-05-20T18:33:57.065Z"}
+{"level":"info","message":"Connected to PostgreSQL database","timestamp":"2025-05-20T18:33:57.084Z"}
+{"level":"info","message":"Database connection successful","timestamp":"2025-05-20T18:33:57.084Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-05-20T18:33:57.085Z"}
+{"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-20T18:33:57.085Z"}
+{"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-20T18:33:57.085Z"}
+{"level":"info","message":"SIGTERM signal received. Shutting down gracefully.","timestamp":"2025-05-20T18:33:57.246Z"}
+{"level":"info","message":"Rate limiters configured successfully","timestamp":"2025-05-20T18:33:57.630Z"}
+{"level":"info","message":"Swagger documentation initialized successfully","timestamp":"2025-05-20T18:33:57.631Z"}
+{"level":"info","message":"Connected to PostgreSQL database","timestamp":"2025-05-20T18:33:57.651Z"}
+{"level":"info","message":"Database connection successful","timestamp":"2025-05-20T18:33:57.652Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-05-20T18:33:57.653Z"}
+{"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-20T18:33:57.653Z"}
+{"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-20T18:33:57.653Z"}
+{"level":"info","message":"SendGrid server is ready to take our messages","timestamp":"2025-05-20T18:33:58.251Z"}
+{"level":"info","message":"SIGTERM signal received. Shutting down gracefully.","timestamp":"2025-05-20T18:36:20.397Z"}
+{"level":"info","message":"Rate limiters configured successfully","timestamp":"2025-05-20T18:36:20.944Z"}
+{"level":"info","message":"Swagger documentation initialized successfully","timestamp":"2025-05-20T18:36:20.945Z"}
+{"level":"info","message":"Connected to PostgreSQL database","timestamp":"2025-05-20T18:36:20.970Z"}
+{"level":"info","message":"Database connection successful","timestamp":"2025-05-20T18:36:20.971Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-05-20T18:36:20.971Z"}
+{"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-20T18:36:20.972Z"}
+{"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-20T18:36:20.972Z"}
+{"level":"info","message":"SendGrid server is ready to take our messages","timestamp":"2025-05-20T18:36:22.265Z"}
+{"level":"info","message":"SIGTERM signal received. Shutting down gracefully.","timestamp":"2025-05-20T18:36:39.846Z"}
+{"level":"info","message":"Rate limiters configured successfully","timestamp":"2025-05-20T18:36:40.348Z"}
+{"level":"info","message":"Swagger documentation initialized successfully","timestamp":"2025-05-20T18:36:40.350Z"}
+{"level":"info","message":"Connected to PostgreSQL database","timestamp":"2025-05-20T18:36:40.378Z"}
+{"level":"info","message":"Database connection successful","timestamp":"2025-05-20T18:36:40.379Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-05-20T18:36:40.380Z"}
+{"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-20T18:36:40.381Z"}
+{"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-20T18:36:40.381Z"}
+{"level":"info","message":"SendGrid server is ready to take our messages","timestamp":"2025-05-20T18:36:40.945Z"}
+{"level":"info","message":"SIGTERM signal received. Shutting down gracefully.","timestamp":"2025-05-20T18:36:41.328Z"}
+{"level":"info","message":"Rate limiters configured successfully","timestamp":"2025-05-20T18:36:43.499Z"}
+{"level":"info","message":"Swagger documentation initialized successfully","timestamp":"2025-05-20T18:36:43.501Z"}
+{"level":"info","message":"Connected to PostgreSQL database","timestamp":"2025-05-20T18:36:43.526Z"}
+{"level":"info","message":"Database connection successful","timestamp":"2025-05-20T18:36:43.527Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-05-20T18:36:43.527Z"}
+{"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-20T18:36:43.527Z"}
+{"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-20T18:36:43.527Z"}
+{"level":"info","message":"SendGrid server is ready to take our messages","timestamp":"2025-05-20T18:36:44.725Z"}
+{"level":"info","message":"SIGTERM signal received. Shutting down gracefully.","timestamp":"2025-05-20T18:40:56.163Z"}
+{"level":"info","message":"Rate limiters configured successfully","timestamp":"2025-05-20T18:40:58.738Z"}
+{"level":"info","message":"Swagger documentation initialized successfully","timestamp":"2025-05-20T18:40:58.739Z"}
+{"level":"info","message":"Connected to PostgreSQL database","timestamp":"2025-05-20T18:40:58.767Z"}
+{"level":"info","message":"Database connection successful","timestamp":"2025-05-20T18:40:58.767Z"}
+{"level":"info","message":"Server running on port 3000","timestamp":"2025-05-20T18:40:58.768Z"}
+{"level":"info","message":"User API docs available at http://localhost:3000/api/docs/user","timestamp":"2025-05-20T18:40:58.768Z"}
+{"level":"info","message":"Admin API docs available at http://localhost:3000/api/docs/admin","timestamp":"2025-05-20T18:40:58.768Z"}
+{"level":"info","message":"SendGrid server is ready to take our messages","timestamp":"2025-05-20T18:40:59.903Z"}

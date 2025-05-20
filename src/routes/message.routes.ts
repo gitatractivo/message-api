@@ -114,7 +114,7 @@ router.post(
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
+ *       - in: query
  *         name: otherUserId
  *         required: true
  *         schema:
@@ -195,7 +195,7 @@ router.get(
 
 /**
  * @swagger
- * /api/messages/{messageId}/read:
+ * /api/messages/{otherUserId}/read:
  *   patch:
  *     summary: Mark a message as read
  *     tags: [Messages]
@@ -203,7 +203,7 @@ router.get(
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: messageId
+ *         name: otherUserId
  *         required: true
  *         schema:
  *           type: integer
@@ -221,7 +221,7 @@ router.get(
  *         description: Server error
  */
 router.patch(
-  "/:messageId/read",
+  "/:otherUserId/read",
 
   validateRequest(markMessageReadSchema),
   // @ts-ignore
@@ -256,5 +256,52 @@ router.patch(
 router.get("/unread/count", (req, res, next) =>
   messageController.getUnreadMessageCount(req, res, next)
 );
+
+/**
+ * @swagger
+ * /api/messages/conversations:
+ *   get:
+ *     summary: Get all conversations for the current user
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of conversations
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get("/conversations", messageController.getAllConversations);
+
+/**
+ * @swagger
+ * /api/messages/{messageId}:
+ *   delete:
+ *     summary: Delete a message from conversation
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the message to delete
+ *     responses:
+ *       200:
+ *         description: Message deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Not authorized to delete this message
+ *       404:
+ *         description: Message not found
+ *       500:
+ *         description: Server error
+ */
+router.delete("/:messageId", messageController.deleteMessage);
 
 export default router;
