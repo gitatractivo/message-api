@@ -55,54 +55,9 @@ const router = Router();
  */
 router.post(
   "/direct",
-
+  authenticate,
   validateRequest(sendMessageSchema),
-
   messageController.sendDirectMessage
-);
-
-/**
- * @swagger
- * /api/messages/group:
- *   post:
- *     summary: Send a message to a group
- *     tags: [Messages]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - groupId
- *               - content
- *             properties:
- *               groupId:
- *                 type: integer
- *                 description: ID of the group
- *               content:
- *                 type: string
- *                 description: Message content
- *     responses:
- *       201:
- *         description: Message sent successfully
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Not a member of the group
- *       404:
- *         description: Group not found
- *       500:
- *         description: Server error
- */
-router.post(
-  "/group",
-
-  validateRequest(sendMessageSchema),
-
-  messageController.sendGroupMessage
 );
 
 /**
@@ -142,55 +97,9 @@ router.post(
  */
 router.get(
   "/direct/:otherUserId",
-
+  authenticate,
   validateRequest(messageQuerySchema),
-
   messageController.getDirectMessages
-);
-
-/**
- * @swagger
- * /api/messages/group/{groupId}:
- *   get:
- *     summary: Get messages from a group
- *     tags: [Messages]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: groupId
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID of the group
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *         description: Number of messages to return
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *           default: 0
- *         description: Number of messages to skip
- *     responses:
- *       200:
- *         description: List of messages
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Group not found
- *       500:
- *         description: Server error
- */
-router.get(
-  "/group/:groupId",
-
-  validateRequest(messageQuerySchema),
-
-  messageController.getGroupMessages
 );
 
 /**
@@ -222,9 +131,8 @@ router.get(
  */
 router.patch(
   "/:otherUserId/read",
-
+  authenticate,
   validateRequest(markMessageReadSchema),
-  // @ts-ignore
   messageController.markMessageAsRead
 );
 
@@ -253,9 +161,7 @@ router.patch(
  *       500:
  *         description: Server error
  */
-router.get("/unread/count", (req, res, next) =>
-  messageController.getUnreadMessageCount(req, res, next)
-);
+router.get("/unread/count", authenticate, messageController.getUnreadMessageCount);
 
 /**
  * @swagger
@@ -273,7 +179,7 @@ router.get("/unread/count", (req, res, next) =>
  *       500:
  *         description: Server error
  */
-router.get("/conversations", messageController.getAllConversations);
+router.get("/conversations", authenticate, messageController.getAllConversations);
 
 /**
  * @swagger
@@ -302,6 +208,6 @@ router.get("/conversations", messageController.getAllConversations);
  *       500:
  *         description: Server error
  */
-router.delete("/:messageId", messageController.deleteMessage);
+router.delete("/:messageId", authenticate, messageController.deleteMessage);
 
 export default router;

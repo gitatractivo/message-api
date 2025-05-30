@@ -68,6 +68,7 @@ export const groupMembers = pgTable("group_members", {
   userId: integer("user_id")
     .references(() => users.id)
     .notNull(),
+  isAdmin: boolean("is_admin").default(false).notNull(),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
 });
 
@@ -118,15 +119,45 @@ export const groupMessages = pgTable("group_messages", {
     .references(() => users.id)
     .notNull(),
   sentAt: timestamp("sent_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const groupMessagesRelations = relations(groupMessages, ({ one }) => ({
-  group: one(groups, {
-    fields: [groupMessages.groupId],
-    references: [groups.id],
-  }),
-  sender: one(users, {
-    fields: [groupMessages.senderId],
-    references: [users.id],
-  }),
-}));
+export const groupMessageReads = pgTable("group_message_reads", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id")
+    .references(() => groupMessages.id)
+    .notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
+  readAt: timestamp("read_at").defaultNow().notNull(),
+});
+
+export const groupMessagesRelations = relations(
+  groupMessages,
+  ({ one, many }) => ({
+    group: one(groups, {
+      fields: [groupMessages.groupId],
+      references: [groups.id],
+    }),
+    sender: one(users, {
+      fields: [groupMessages.senderId],
+      references: [users.id],
+    }),
+    reads: many(groupMessageReads),
+  })
+);
+
+export const groupMessageReadsRelations = relations(
+  groupMessageReads,
+  ({ one }) => ({
+    message: one(groupMessages, {
+      fields: [groupMessageReads.messageId],
+      references: [groupMessages.id],
+    }),
+    user: one(users, {
+      fields: [groupMessageReads.userId],
+      references: [users.id],
+    }),
+  })
+);

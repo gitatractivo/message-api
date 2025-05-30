@@ -9,7 +9,6 @@ import {
   resetPasswordSchema,
 } from "@/validators/auth.validator";
 
-
 const router = Router();
 
 /**
@@ -306,7 +305,6 @@ router.post(
 router.post(
   "/reset-password/",
   validateRequest(resetPasswordSchema),
-
   authController.resetPassword
 );
 

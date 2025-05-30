@@ -1,6 +1,4 @@
-import { z, TypeOf } from "zod";
-import { Request, Response, NextFunction } from "express";
-import { logger } from "@/config/logger";
+import { TypeOf, z } from "zod";
 
 /**
  * @swagger
@@ -175,4 +173,3 @@ export type VerifyEmailInput = TypeOf<typeof verifyEmailSchema>;
 export type ForgotPasswordInput = TypeOf<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = TypeOf<typeof resetPasswordSchema>;
 
-// Middleware for validating requests

@@ -7,6 +7,14 @@ import {
   updateGroupSchema,
   addGroupMemberSchema,
   removeGroupMemberSchema,
+  makeGroupAdminSchema,
+  removeGroupAdminSchema,
+  leaveGroupSchema,
+  editGroupMessageSchema,
+  deleteGroupMessageSchema,
+  markGroupMessageReadSchema,
+  getGroupMessagesSchema,
+  groupMessageSchema,
 } from "@/validators/group.validator";
 import type { Request } from "express";
 import type { z } from "zod";
@@ -33,6 +41,26 @@ type RemoveMemberRequest = Request<
 >;
 type GetGroupRequest = Request<{ groupId: string }>;
 type GetGroupMembersRequest = Request<{ groupId: string }>;
+type MakeGroupAdminInput = Request<{ groupId: string }, {}, { userId: number }>;
+type RemoveGroupAdminInput = Request<
+  { groupId: string },
+  {},
+  { userId: number }
+>;
+type LeaveGroupInput = Request<{ groupId: string }>;
+type EditGroupMessageInput = Request<
+  { messageId: string },
+  {},
+  { content: string }
+>;
+type DeleteGroupMessageInput = Request<{ messageId: string }>;
+type MarkGroupMessageReadInput = Request<{ messageId: string }>;
+type GetGroupMessagesInput = Request<
+  { groupId: string },
+  {},
+  {},
+  { limit?: number; offset?: number }
+>;
 
 const router = Router();
 
@@ -328,6 +356,350 @@ router.get("/:groupId", authenticate, (req: GetGroupRequest, res, next) =>
  */
 router.get("/", authenticate, (req, res, next) =>
   groupController.getAllGroups(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/groups/{groupId}/admin:
+ *   post:
+ *     summary: Make a user a group admin
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the group
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the user to make admin
+ *     responses:
+ *       200:
+ *         description: User made admin successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Only group admins can make other users admin
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  "/:groupId/admin",
+  authenticate,
+  validateRequest(makeGroupAdminSchema),
+  (req: MakeGroupAdminInput, res, next) =>
+    groupController.makeGroupAdmin(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/groups/{groupId}/admin:
+ *   delete:
+ *     summary: Remove a user's admin status
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the group
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *                 description: ID of the admin to remove
+ *     responses:
+ *       200:
+ *         description: Admin status removed successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Only group admins can remove other admins
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.delete(
+  "/:groupId/admin",
+  authenticate,
+  validateRequest(removeGroupAdminSchema),
+  (req: RemoveGroupAdminInput, res, next) =>
+    groupController.removeGroupAdmin(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/groups/{groupId}/leave:
+ *   post:
+ *     summary: Leave a group
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the group
+ *     responses:
+ *       200:
+ *         description: Successfully left the group
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Not a member of the group
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  "/:groupId/leave",
+  authenticate,
+  validateRequest(leaveGroupSchema),
+  (req: LeaveGroupInput, res, next) =>
+    groupController.leaveGroup(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/groups/messages/{messageId}:
+ *   patch:
+ *     summary: Edit a group message
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the message
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 description: New message content
+ *     responses:
+ *       200:
+ *         description: Message edited successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Can only edit own messages
+ *       404:
+ *         description: Message not found
+ *       500:
+ *         description: Server error
+ */
+router.patch(
+  "/messages/:messageId",
+  authenticate,
+  validateRequest(editGroupMessageSchema),
+  (req: Request<{ messageId: string }, {}, { content: string }>, res, next) =>
+    groupController.editGroupMessage(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/groups/messages/{messageId}:
+ *   delete:
+ *     summary: Delete a group message
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the message
+ *     responses:
+ *       200:
+ *         description: Message deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Can only delete own messages or must be group admin
+ *       404:
+ *         description: Message not found
+ *       500:
+ *         description: Server error
+ */
+router.delete(
+  "/messages/:messageId",
+  authenticate,
+  validateRequest(deleteGroupMessageSchema),
+  (req: Request<{ messageId: string }>, res, next) =>
+    groupController.deleteGroupMessage(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/groups/messages/{messageId}/read:
+ *   post:
+ *     summary: Mark a group message as read
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: messageId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the message
+ *     responses:
+ *       200:
+ *         description: Message marked as read
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Not a member of the group
+ *       404:
+ *         description: Message not found
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  "/messages/:messageId/read",
+  authenticate,
+  validateRequest(markGroupMessageReadSchema),
+  (req: Request<{ messageId: string }>, res, next) =>
+    groupController.markGroupMessageAsRead(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/groups/{groupId}/messages:
+ *   get:
+ *     summary: Get all messages from a group
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the group
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of messages to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of messages to skip
+ *     responses:
+ *       200:
+ *         description: List of messages
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Not a member of the group
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  "/:groupId/messages",
+  authenticate,
+  validateRequest(getGroupMessagesSchema),
+  (
+    req: Request<
+      { groupId: string },
+      {},
+      {},
+      { limit?: number; offset?: number }
+    >,
+    res,
+    next
+  ) => groupController.getGroupMessages(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/groups/{groupId}/messages:
+ *   post:
+ *     summary: Send a message to a group
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the group
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 description: Message content
+ *     responses:
+ *       201:
+ *         description: Message sent successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Not a member of the group
+ *       404:
+ *         description: Group not found
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  "/:groupId/messages",
+  authenticate,
+  validateRequest(groupMessageSchema),
+  (req: Request<{ groupId: string }, {}, { content: string }>, res, next) =>
+    groupController.sendGroupMessage(req, res, next)
 );
 
 export default router;

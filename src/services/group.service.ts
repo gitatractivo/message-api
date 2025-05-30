@@ -1,6 +1,12 @@
 import { db } from "@/config/database";
-import { groups, groupMembers, users } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import {
+  groups,
+  groupMembers,
+  users,
+  groupMessages,
+  groupMessageReads,
+} from "@/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { logger } from "@/config/logger";
 import { AppError } from "@/utils/appError";
 
@@ -20,25 +26,31 @@ class GroupService {
         throw new AppError("Creator not found", 404);
       }
 
-      // Create group
-      const [group] = await db
-        .insert(groups)
-        .values({
-          name: data.name,
-          description: data.description,
-          createdBy: data.createdBy,
-        })
-        .returning();
+      // Create group and add creator as admin member in a transaction
+      const result = await db.transaction(async (tx) => {
+        // Create group
+        const [group] = await tx
+          .insert(groups)
+          .values({
+            name: data.name,
+            description: data.description,
+            createdBy: data.createdBy,
+          })
+          .returning();
 
-      // Add creator as admin member
-      await db.insert(groupMembers).values({
-        groupId: group.id,
-        userId: data.createdBy,
+        // Add creator as admin member
+        await tx.insert(groupMembers).values({
+          groupId: group.id,
+          userId: data.createdBy,
+          isAdmin: true, // Set creator as admin
+        });
+
+        return group;
       });
 
       return {
         group: {
-          ...group,
+          ...result,
           creator: {
             id: creator.id,
             firstName: creator.firstName,
@@ -91,9 +103,34 @@ class GroupService {
         throw new AppError("Group not found", 404);
       }
 
-      await db.delete(groups).where(eq(groups.id, groupId));
+      // Delete all related records in a transaction
+      await db.transaction(async (tx) => {
+        // First delete all message reads for this group's messages
+        await tx
+          .delete(groupMessageReads)
+          .where(
+            eq(
+              groupMessageReads.messageId,
+              tx
+                .select({ id: groupMessages.id })
+                .from(groupMessages)
+                .where(eq(groupMessages.groupId, groupId))
+            )
+          );
 
-      return { message: "Group deleted successfully" };
+        // Then delete all messages
+        await tx
+          .delete(groupMessages)
+          .where(eq(groupMessages.groupId, groupId));
+
+        // Then delete all group members
+        await tx.delete(groupMembers).where(eq(groupMembers.groupId, groupId));
+
+        // Finally delete the group
+        await tx.delete(groups).where(eq(groups.id, groupId));
+      });
+
+      return { message: "Group and all related data deleted successfully" };
     } catch (error) {
       logger.error("Group deletion failed:", error);
       throw error;
@@ -281,6 +318,378 @@ class GroupService {
       };
     } catch (error) {
       logger.error("Failed to fetch groups:", error);
+      throw error;
+    }
+  }
+
+  async makeGroupAdmin(groupId: number, userId: number, adminId: number) {
+    try {
+      // Check if the user making the request is an admin
+      const admin = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.userId, adminId),
+          eq(groupMembers.isAdmin, true)
+        ),
+      });
+
+      if (!admin) {
+        throw new AppError("Only group admins can make other users admin", 403);
+      }
+
+      // Check if target user is a member
+      const member = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.userId, userId)
+        ),
+      });
+
+      if (!member) {
+        throw new AppError("User is not a member of this group", 404);
+      }
+
+      // Update member to admin
+      const [updatedMember] = await db
+        .update(groupMembers)
+        .set({ isAdmin: true })
+        .where(
+          and(
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.userId, userId)
+          )
+        )
+        .returning();
+
+      return { member: updatedMember };
+    } catch (error) {
+      logger.error("Failed to make group admin:", error);
+      throw error;
+    }
+  }
+
+  async removeGroupAdmin(groupId: number, userId: number, adminId: number) {
+    try {
+      // Check if the user making the request is an admin
+      const admin = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.userId, adminId),
+          eq(groupMembers.isAdmin, true)
+        ),
+      });
+
+      if (!admin) {
+        throw new AppError("Only group admins can remove other admins", 403);
+      }
+
+      // Check if target user is an admin
+      const member = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.userId, userId),
+          eq(groupMembers.isAdmin, true)
+        ),
+      });
+
+      if (!member) {
+        throw new AppError("User is not an admin of this group", 404);
+      }
+
+      // Check if trying to remove the last admin
+      const admins = await db.query.groupMembers.findMany({
+        where: and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.isAdmin, true)
+        ),
+      });
+
+      if (admins.length <= 1) {
+        throw new AppError("Cannot remove the last admin of the group", 400);
+      }
+
+      // Remove admin status
+      const [updatedMember] = await db
+        .update(groupMembers)
+        .set({ isAdmin: false })
+        .where(
+          and(
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.userId, userId)
+          )
+        )
+        .returning();
+
+      return { member: updatedMember };
+    } catch (error) {
+      logger.error("Failed to remove group admin:", error);
+      throw error;
+    }
+  }
+
+  async leaveGroup(groupId: number, userId: number) {
+    try {
+      // Check if user is a member
+      const member = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.userId, userId)
+        ),
+      });
+
+      if (!member) {
+        throw new AppError("You are not a member of this group", 404);
+      }
+
+      // Check if trying to leave as last admin
+      if (member.isAdmin) {
+        const admins = await db.query.groupMembers.findMany({
+          where: and(
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.isAdmin, true)
+          ),
+        });
+
+        if (admins.length <= 1) {
+          throw new AppError(
+            "Cannot leave the group as the last admin. Please assign another admin first.",
+            400
+          );
+        }
+      }
+
+      // Remove member
+      await db
+        .delete(groupMembers)
+        .where(
+          and(
+            eq(groupMembers.groupId, groupId),
+            eq(groupMembers.userId, userId)
+          )
+        );
+
+      return { message: "Successfully left the group" };
+    } catch (error) {
+      logger.error("Failed to leave group:", error);
+      throw error;
+    }
+  }
+
+  async editGroupMessage(messageId: number, content: string, userId: number) {
+    try {
+      const message = await db.query.groupMessages.findFirst({
+        where: eq(groupMessages.id, messageId),
+      });
+
+      if (!message) {
+        throw new AppError("Message not found", 404);
+      }
+
+      if (message.senderId !== userId) {
+        throw new AppError("You can only edit your own messages", 403);
+      }
+
+      const [updatedMessage] = await db
+        .update(groupMessages)
+        .set({ content, updatedAt: new Date() })
+        .where(eq(groupMessages.id, messageId))
+        .returning();
+
+      return { message: updatedMessage };
+    } catch (error) {
+      logger.error("Failed to edit group message:", error);
+      throw error;
+    }
+  }
+
+  async deleteGroupMessage(messageId: number, userId: number) {
+    try {
+      const message = await db.query.groupMessages.findFirst({
+        where: eq(groupMessages.id, messageId),
+      });
+
+      if (!message) {
+        throw new AppError("Message not found", 404);
+      }
+
+      // Check if user is message sender or group admin
+      const isAdmin = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, message.groupId),
+          eq(groupMembers.userId, userId),
+          eq(groupMembers.isAdmin, true)
+        ),
+      });
+
+      if (message.senderId !== userId && !isAdmin) {
+        throw new AppError(
+          "You can only delete your own messages or must be a group admin",
+          403
+        );
+      }
+
+      await db.delete(groupMessages).where(eq(groupMessages.id, messageId));
+
+      return { message: "Message deleted successfully" };
+    } catch (error) {
+      logger.error("Failed to delete group message:", error);
+      throw error;
+    }
+  }
+
+  async markGroupMessageAsRead(messageId: number, userId: number) {
+    try {
+      const message = await db.query.groupMessages.findFirst({
+        where: eq(groupMessages.id, messageId),
+      });
+
+      if (!message) {
+        throw new AppError("Message not found", 404);
+      }
+
+      // Check if user is a member of the group
+      const isMember = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, message.groupId),
+          eq(groupMembers.userId, userId)
+        ),
+      });
+
+      if (!isMember) {
+        throw new AppError("You are not a member of this group", 403);
+      }
+
+      // Check if already read
+      const existingRead = await db.query.groupMessageReads.findFirst({
+        where: and(
+          eq(groupMessageReads.messageId, messageId),
+          eq(groupMessageReads.userId, userId)
+        ),
+      });
+
+      if (existingRead) {
+        return { message: "Message already marked as read" };
+      }
+
+      // Mark as read
+      const [read] = await db
+        .insert(groupMessageReads)
+        .values({
+          messageId,
+          userId,
+        })
+        .returning();
+
+      return { read };
+    } catch (error) {
+      logger.error("Failed to mark group message as read:", error);
+      throw error;
+    }
+  }
+
+  async getGroupMessages(
+    groupId: number,
+    userId: number,
+    limit = 50,
+    offset = 0
+  ) {
+    try {
+      // Check if user is a member
+      const isMember = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.userId, userId)
+        ),
+      });
+
+      if (!isMember) {
+        throw new AppError("You are not a member of this group", 403);
+      }
+
+      const messages = await db.query.groupMessages.findMany({
+        where: eq(groupMessages.groupId, groupId),
+        orderBy: [desc(groupMessages.sentAt)],
+        limit,
+        offset,
+        with: {
+          sender: {
+            columns: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          reads: {
+            where: eq(groupMessageReads.userId, userId),
+          },
+        },
+      });
+
+      return {
+        messages: messages.map((message) => ({
+          ...message,
+          isRead: message.reads.length > 0,
+        })),
+      };
+    } catch (error) {
+      logger.error("Failed to fetch group messages:", error);
+      throw error;
+    }
+  }
+
+  async sendGroupMessage(groupId: number, userId: number, content: string) {
+    try {
+      // Check if group exists
+      const group = await db.query.groups.findFirst({
+        where: eq(groups.id, groupId),
+      });
+
+      if (!group) {
+        throw new AppError("Group not found", 404);
+      }
+
+      // Check if user is a member of the group
+      const isMember = await db.query.groupMembers.findFirst({
+        where: and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.userId, userId)
+        ),
+      });
+
+      if (!isMember) {
+        throw new AppError("You are not a member of this group", 403);
+      }
+
+      // Create message
+      const [message] = await db
+        .insert(groupMessages)
+        .values({
+          content,
+          senderId: userId,
+          groupId,
+        })
+        .returning();
+
+      return {
+        message: {
+          ...message,
+          sender: {
+            id: userId,
+            firstName: (
+              await db.query.users.findFirst({ where: eq(users.id, userId) })
+            )?.firstName,
+            lastName: (
+              await db.query.users.findFirst({ where: eq(users.id, userId) })
+            )?.lastName,
+          },
+          group: {
+            id: groupId,
+            name: group.name,
+          },
+        },
+      };
+    } catch (error) {
+      logger.error("Failed to send group message:", error);
       throw error;
     }
   }

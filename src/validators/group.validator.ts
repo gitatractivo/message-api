@@ -176,3 +176,81 @@ export const getAllGroupsSchema = z.object({
 // Export types
 export type GetAllGroupsInput = TypeOf<typeof getAllGroupsSchema>;
 export type GetGroupByIdInput = TypeOf<typeof getGroupByIdSchema>;
+
+//schema for making group admin
+export const makeGroupAdminSchema = z.object({
+  body: z.object({
+    userId: z.number().int().positive("User ID must be a positive integer"),
+  }),
+  params: z.object({
+    groupId: z.string().min(1, "Group ID is required"),
+  }),
+});
+
+//schema for removing group admin
+export const removeGroupAdminSchema = z.object({
+  body: z.object({
+    userId: z.number().int().positive("User ID must be a positive integer"),
+  }),
+  params: z.object({
+    groupId: z.string().min(1, "Group ID is required"),
+  }),
+});
+
+//schema for leaving group
+export const leaveGroupSchema = z.object({
+  params: z.object({
+    groupId: z.string().min(1, "Group ID is required"),
+  }),
+});
+
+//schema for editing group message
+export const editGroupMessageSchema = z.object({
+  body: z.object({
+    content: z
+      .string()
+      .min(1, "Message content cannot be empty")
+      .max(2000, "Message content is too long"),
+  }),
+  params: z.object({
+    messageId: z.string().min(1, "Message ID is required"),
+  }),
+});
+
+//schema for deleting group message
+export const deleteGroupMessageSchema = z.object({
+  params: z.object({
+    messageId: z.string().min(1, "Message ID is required"),
+  }),
+});
+
+//schema for marking group message as read
+export const markGroupMessageReadSchema = z.object({
+  params: z.object({
+    messageId: z.string().min(1, "Message ID is required"),
+  }),
+});
+
+// Export types
+export type MakeGroupAdminInput = TypeOf<typeof makeGroupAdminSchema>;
+export type RemoveGroupAdminInput = TypeOf<typeof removeGroupAdminSchema>;
+export type LeaveGroupInput = TypeOf<typeof leaveGroupSchema>;
+export type EditGroupMessageInput = TypeOf<typeof editGroupMessageSchema>;
+export type DeleteGroupMessageInput = TypeOf<typeof deleteGroupMessageSchema>;
+export type MarkGroupMessageReadInput = TypeOf<
+  typeof markGroupMessageReadSchema
+>;
+
+//schema for get group messages
+export const getGroupMessagesSchema = z.object({
+  params: z.object({
+    groupId: z.string().min(1, "Group ID is required"),
+  }),
+  query: z.object({
+    limit: z.coerce.number().int().min(1).max(100).default(50).optional(),
+    offset: z.coerce.number().int().min(0).default(0).optional(),
+  }),
+});
+
+// Export types
+export type GetGroupMessagesInput = TypeOf<typeof getGroupMessagesSchema>;

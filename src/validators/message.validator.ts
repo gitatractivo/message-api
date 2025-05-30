@@ -1,4 +1,4 @@
-import { z, TypeOf } from "zod";
+import { z, TypeOf, coerce } from "zod";
 
 /**
  * @swagger
@@ -27,7 +27,7 @@ export const sendMessageSchema = z.object({
       .string()
       .min(1, "Message content cannot be empty")
       .max(2000, "Message content is too long"),
-    receiverId: z
+    receiverId: z.coerce
       .number()
       .int()
       .positive("Receiver ID must be a positive integer"),
@@ -51,7 +51,10 @@ export const sendMessageSchema = z.object({
  */
 export const markMessageReadSchema = z.object({
   params: z.object({
-    otherUserId: z.coerce.number().int().positive("Other User ID must be a positive integer"),
+    otherUserId: z.coerce
+      .number()
+      .int()
+      .positive("Other User ID must be a positive integer"),
   }),
 });
 
@@ -88,7 +91,7 @@ export const markMessageReadSchema = z.object({
  */
 export const messageQuerySchema = z.object({
   query: z.object({
-    userId: z
+    userId: z.coerce
       .number()
       .int()
       .positive("User ID must be a positive integer")
@@ -102,7 +105,10 @@ export const messageQuerySchema = z.object({
 //schema for sending group message
 export const sendGroupMessageSchema = z.object({
   body: z.object({
-    content: z.string().min(1, "Message content cannot be empty").max(2000, "Message content is too long"),
+    content: z
+      .string()
+      .min(1, "Message content cannot be empty")
+      .max(2000, "Message content is too long"),
     groupId: z.number().int().positive("Group ID must be a positive integer"),
   }),
 });
@@ -110,8 +116,16 @@ export const sendGroupMessageSchema = z.object({
 //schema for get direct messages
 export const getDirectMessagesSchema = z.object({
   query: z.object({
-    userId: z.number().int().positive("User ID must be a positive integer").optional(),
-    otherUserId: z.number().int().positive("Other user ID must be a positive integer").optional(),
+    userId: z.coerce
+      .number()
+      .int()
+      .positive("User ID must be a positive integer")
+      .optional(),
+    otherUserId: z.coerce
+      .number()
+      .int()
+      .positive("Other user ID must be a positive integer")
+      .optional(),
     limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
     offset: z.coerce.number().int().min(0).default(0).optional(),
   }),
@@ -120,7 +134,11 @@ export const getDirectMessagesSchema = z.object({
 //schema for get group messages
 export const getGroupMessagesSchema = z.object({
   query: z.object({
-    groupId: z.number().int().positive("Group ID must be a positive integer").optional(),
+    groupId: z.coerce
+      .number()
+      .int()
+      .positive("Group ID must be a positive integer")
+      .optional(),
     limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
     offset: z.coerce.number().int().min(0).default(0).optional(),
   }),
@@ -129,7 +147,10 @@ export const getGroupMessagesSchema = z.object({
 //schema for delete message
 export const deleteMessageSchema = z.object({
   params: z.object({
-    messageId: z.number().int().positive("Message ID must be a positive integer"),
+    messageId: z.coerce
+      .number()
+      .int()
+      .positive("Message ID must be a positive integer"),
   }),
 });
 
