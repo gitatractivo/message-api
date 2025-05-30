@@ -6,6 +6,7 @@ import {
   sendMessageSchema,
   markMessageReadSchema,
   messageQuerySchema,
+  deleteMessageSchema,
 } from "@/validators/message.validator";
 import type { Request } from "express";
 import type { z } from "zod";
@@ -133,6 +134,7 @@ router.patch(
   "/:otherUserId/read",
   authenticate,
   validateRequest(markMessageReadSchema),
+  // @ts-ignore
   messageController.markMessageAsRead
 );
 
@@ -161,7 +163,11 @@ router.patch(
  *       500:
  *         description: Server error
  */
-router.get("/unread/count", authenticate, messageController.getUnreadMessageCount);
+router.get(
+  "/unread/count",
+  authenticate,
+  messageController.getUnreadMessageCount
+);
 
 /**
  * @swagger
@@ -179,7 +185,11 @@ router.get("/unread/count", authenticate, messageController.getUnreadMessageCoun
  *       500:
  *         description: Server error
  */
-router.get("/conversations", authenticate, messageController.getAllConversations);
+router.get(
+  "/conversations",
+  authenticate,
+  messageController.getAllConversations
+);
 
 /**
  * @swagger
@@ -208,6 +218,12 @@ router.get("/conversations", authenticate, messageController.getAllConversations
  *       500:
  *         description: Server error
  */
-router.delete("/:messageId", authenticate, messageController.deleteMessage);
+router.delete(
+  "/:messageId",
+  authenticate,
+  validateRequest(deleteMessageSchema),
+  // @ts-ignore
+  messageController.deleteMessage
+);
 
 export default router;

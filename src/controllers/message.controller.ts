@@ -10,7 +10,6 @@ import {
   DeleteMessageInput,
 } from "@/validators/message.validator";
 
-
 class MessageController {
   async sendDirectMessage(
     req: Request<{}, {}, SendMessageInput["body"]>,
@@ -65,14 +64,18 @@ class MessageController {
   }
 
   async getDirectMessages(
-    req: Request<{}, {}, {}, GetDirectMessagesInput["query"]>,
+    req: Request<
+      {},
+      {},
+      {},
+      GetDirectMessagesInput["query"]
+    >,
     res: Response,
     next: NextFunction
   ) {
     try {
       const userId = req.user?.id;
-      const { otherUserId } = req.query;
-      const { limit, offset } = req.query;
+      const { limit, offset,otherUserId } = req.query;
 
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -115,7 +118,7 @@ class MessageController {
   }
 
   async markMessageAsRead(
-    req: Request<MarkMessageReadInput["params"], {}, {}, {}>,
+    req: Request<{otherUserId:number}, {}, {}, {}>,
     res: Response,
     next: NextFunction
   ) {
@@ -186,7 +189,10 @@ class MessageController {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const result = await messageService.deleteMessage(userId, Number(messageId));
+      const result = await messageService.deleteMessage(
+        userId,
+        Number(messageId)
+      );
 
       res.json(result);
     } catch (error) {
