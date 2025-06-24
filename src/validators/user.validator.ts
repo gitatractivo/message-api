@@ -24,7 +24,9 @@ import { z, TypeOf } from "zod";
  */
 export const searchUsersSchema = z.object({
   query: z.object({
-    query: z.string().min(1, "Search query cannot be empty"),
+    query: z
+      .string({ required_error: "Search query cannot be empty" })
+      .min(1, "Search query cannot be empty"),
     limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
     offset: z.coerce.number().int().min(0).default(0).optional(),
   }),

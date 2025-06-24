@@ -5,6 +5,7 @@ import {
   groups,
   groupMembers,
   groupMessages,
+  groupMessageReads,
 } from "@/db/schema";
 import { eq, and, desc, or } from "drizzle-orm";
 import { logger } from "@/config/logger";
@@ -210,9 +211,100 @@ class MessageService {
     try {
       const unreadMessages = await db.query.messages.findMany({
         where: and(eq(messages.receiverId, userId), eq(messages.read, false)),
+        with: {
+          sender: {
+            columns: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
       });
 
-      return { count: unreadMessages.length };
+      const senders = unreadMessages.reduce((acc: any, message: any) => {
+        const senderId = message.senderId;
+        if (!acc[senderId]) {
+          acc[senderId] = {
+            senderId,
+            firstName: message.sender.firstName,
+            lastName: message.sender.lastName,
+            email: message.sender.email,
+            unreadCount: 1,
+            lastMessage: message.content,
+            lastMessageTime: message.sentAt,
+          };
+        } else {
+          acc[senderId].unreadCount++;
+          acc[senderId].lastMessage = message.content;
+          acc[senderId].lastMessageTime = message.sentAt;
+        }
+        return acc;
+      }, {});
+
+      //similary count for groups
+      // 1. Find all groups the user is a member of
+      const userGroups = await db.query.groupMembers.findMany({
+        where: eq(groupMembers.userId, userId),
+        with: {
+          group: {
+            columns: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      // 2. For each group, find unread messages for this user
+      const groupUnreads: any[] = [];
+      for (const member of userGroups) {
+        const groupId = member.group.id;
+        // Find unread group messages for this group and user
+        const unreadGroupMessages = await db.query.groupMessages.findMany({
+          where: eq(groupMessages.groupId, groupId),
+          orderBy: [desc(groupMessages.sentAt)],
+          with: {
+            sender: {
+              columns: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+            reads: {
+              where: eq(groupMessageReads.userId, userId),
+            },
+          },
+        });
+        // Filter messages that are not read by this user
+        const unread = unreadGroupMessages.filter(
+          (msg: any) => !msg.reads || msg.reads.length === 0
+        );
+        if (unread.length > 0) {
+          // Get the latest unread message
+          const lastMsg = unread[0];
+          groupUnreads.push({
+            groupId,
+            groupName: member.group.name,
+            unreadCount: unread.length,
+            lastSender: lastMsg.sender,
+            lastMessage: lastMsg.content,
+            lastMessageTime: lastMsg.sentAt,
+          });
+        }
+      }
+
+      // Convert the accumulator object to an array
+      const sendersArray = Object.values(senders);
+
+      return {
+        count: unreadMessages.length,
+        directUnreads: sendersArray,
+        groupUnreads,
+      };
     } catch (error) {
       logger.error("Failed to get unread message count:", error);
       throw error;
