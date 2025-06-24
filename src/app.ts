@@ -56,6 +56,10 @@ app.get("/health", async (req, res) => {
   }
 });
 
+app.get("/", (req, res) => {
+  res.send("Message api is running 🚀 . Health check at /health");
+});
+
 // Global error handling middleware
 app.use(errorMiddleware);
 

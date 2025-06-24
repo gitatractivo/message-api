@@ -59,13 +59,28 @@ const startServer = async () => {
   }
 };
 
-// Handle process termination
+// Handle process termination sigterm or sigkill
 process.on("SIGTERM", () => {
   logger.info("SIGTERM signal received. Shutting down gracefully.");
   server.close(() => {
     logger.info("HTTP server closed.");
     process.exit(0);
   });
+});
+
+// Handle process termination sigint
+process.on("SIGINT", () => {
+  logger.info("SIGINT signal received. Shutting down gracefully.");
+  server.close(() => {
+    logger.info("HTTP server closed.");
+    process.exit(0);
+  });
+});
+
+// Handle process termination uncaughtException
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught Exception:", error);
+  process.exit(1);
 });
 
 // Start the server
