@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1746725523949,
+      "tag": "0000_skinny_gravity",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1747803297377,
+      "tag": "0001_thankful_captain_midlands",
+      "breakpoints": true
+    }
+  ]
+}
