@@ -36,7 +36,8 @@ export const setupDirectMessageHandlers = (
     async (data: DirectMessagePayload, callback) => {
       try {
         // Validate message data
-        const validatedData = messageSchema.parse(data);
+        const payload = typeof data === "string" ? JSON.parse(data) : data;
+        const validatedData = messageSchema.parse(payload);
 
         const { content, receiverId } = validatedData;
         const senderId = socket.user?.id;
@@ -123,6 +124,12 @@ export const setupDirectMessageHandlers = (
       if (!updatedMessage) {
         throw new Error("Message not found or not authorized");
       }
+
+      // Notify the original sender that the message was read
+      io.to(`user:${updatedMessage.senderId}`).emit("direct-message:read", {
+        messageId: updatedMessage.id,
+        readBy: updatedMessage.receiverId,
+      });
 
       // Send success callback if provided
       if (callback) {

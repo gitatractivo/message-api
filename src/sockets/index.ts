@@ -35,6 +35,7 @@ export const setupSocketIO = (io: Server): void => {
 
   // Handle new connections
   io.on("connection", (socket: Socket) => {
+    logger.info("New socket connection", socket.handshake.auth);
     const userId = socket.user?.id;
 
     if (userId) {

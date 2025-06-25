@@ -46,6 +46,7 @@ const startServer = async () => {
       logger.info(
         `Admin API docs available at http://localhost:${PORT}/api/docs/admin`
       );
+ 
     });
 
     // Handle server errors

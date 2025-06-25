@@ -30,6 +30,7 @@ export const setupGroupMessageHandlers = (io: Server, socket: Socket): void => {
   // Handle joining group rooms for real-time updates
   socket.on("group:join", async (groupId: number, callback) => {
     try {
+      logger.info("group:join", groupId);
       const userId = socket.user?.id;
 
       if (!userId) {
@@ -106,8 +107,11 @@ export const setupGroupMessageHandlers = (io: Server, socket: Socket): void => {
     "group-message:send",
     async (data: GroupMessagePayload, callback) => {
       try {
+        // Payloads from some clients may be sent as strings; parse if needed.
+        const payload = typeof data === "string" ? JSON.parse(data) : data;
+
         // Validate message data
-        const validatedData = groupMessageSchema.parse(data);
+        const validatedData = groupMessageSchema.parse(payload);
 
         const { content, groupId } = validatedData;
         const senderId = socket.user?.id;
@@ -152,11 +156,10 @@ export const setupGroupMessageHandlers = (io: Server, socket: Socket): void => {
           sentAt: newMessage.sentAt,
         };
 
-        // Emit to all members in the group room
-        io.to(`group:${groupId}`).emit(
-          "group-message:received",
-          messageResponse
-        );
+        // Broadcast to all other members in the group room
+        socket
+          .to(`group:${groupId}`)
+          .emit("group-message:received", messageResponse);
 
         // Send success callback if provided
         if (callback) {
